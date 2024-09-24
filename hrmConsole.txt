@@ -1,0 +1,1537 @@
+
+using System;
+
+
+namespace HRM_App
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+
+            DALClass dalObject = new DALClass();
+
+            #region Call the method for Login    
+            try
+            {               
+                string LoginQuery = "select * from employeeinfo where userid=@userid and password=@password";
+                dalObject.loginMethod(LoginQuery, dalObject.openSqlConnection());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Something went wrong: " + ex.Message);
+            }
+            #endregion                               
+        }
+    }
+}
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace HRM_App
+{
+    class menurights
+    {
+        public int _menuid { get; set; }
+        public int _empid { get; set; }
+    }
+}
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace HRM_App
+{
+    class menumapping
+    {        
+        public string _description { get; set; }       
+    }
+}
+
+
+
+
+using System;
+using System.Data;
+using System.Data.SqlClient;
+
+namespace HRM_App
+{
+    class MenuClass
+    {
+        string choice;
+        DALClass dalObject = new DALClass();
+        employeeinfo  empObject = new employeeinfo();
+        menurights rightObject = new menurights();
+        menumapping mappingObject = new menumapping();
+        employeedetail empDetailObject = new employeedetail();
+        public string GetDateString(object entrydate)
+        {
+            if (entrydate is DateTime)
+            {                              
+                return ((DateTime)entrydate).ToString("dd-MM-yyyy");
+            }
+            else if (DateTime.TryParse(entrydate.ToString(), out DateTime parsedDate))
+            {                
+                return parsedDate.ToString("dd-MM-yyyy");
+            }
+            else
+            {                
+                throw new ArgumentException("Invalid entrydate format");
+            }
+        }
+        public void callMenuRights(string userId)
+        {
+            string queryEmpRights = $"SELECT m.menuid,m.description FROM menumapping m JOIN menurights r ON m.menuid = r.menuid join employeeinfo e on e.empid=r.empid where e.userid='{userId}'";
+            DataTable dataTable = dalObject.GetDataTableFromDatabase1(queryEmpRights, dalObject.openSqlConnection());
+            Console.Write("Welcome to HRM Application\n");
+            Console.Write("\n");
+            foreach (DataRow row in dataTable.Rows)
+            {
+                string[] records = {
+                                        row["menuid"].ToString(),
+                                        row["description"].ToString(),
+                                       };
+                Console.WriteLine(records[0] + " - " + records[1]);
+            }
+        }
+        public void callAllEmpData()
+        {
+            try
+            {
+                string queryAllEmpDetail = @"select ef.empid,ef.empname,ef.gender,ef.userid,ef.password,ef.designation,ef.doj,ef.leavedate,ed.empdob, 
+                                             ed.qualification,ed.depart,ed.salary,ed.married,ed.spouse,ed.address,ed.city from employeeinfo ef inner join 
+                                             employeedetail ed on ef.empid = ed.empid ";
+                DataTable dataTable = dalObject.GetDataTableFromDatabase(queryAllEmpDetail, dalObject.openSqlConnection());
+                Console.Write("Welcome to HRM Application\n");
+                Console.Write("\n");
+                string[] headers = { "Emp ID", "Name", "Gender", "Designation", "Joining Date", "Leave Date", "DOB", "Qualification", "Department", "Salary", "Married", "Spouse", "Address", "City" };
+                int[] columnWidths = new int[headers.Length];
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    columnWidths[i] = headers[i].Length;
+                }
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    string[] records = {
+                                        row["empid"].ToString(),
+                                        row["empname"].ToString(),
+                                        row["gender"].ToString(),
+                                        row["designation"].ToString(),
+                                        GetDateString(row["doj"].ToString()),                                      
+                                        row["leavedate"].ToString(),
+                                        GetDateString(row["empdob"].ToString()),
+                                        row["qualification"].ToString(),
+                                        row["depart"].ToString(),
+                                        row["salary"].ToString(),
+                                        row["married"].ToString(),
+                                        row["spouse"].ToString(),
+                                        row["address"].ToString(),
+                                        row["city"].ToString()
+                                       };
+                    for (int i = 0; i < records.Length; i++)
+                    {
+                        columnWidths[i] = Math.Max(columnWidths[i], records[i].Length);
+                    }
+                }
+                // Print headers with lines
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    Console.Write("-".PadRight(columnWidths[i] + 1, '-'));
+                }
+                Console.WriteLine("-");
+
+                // Print headers
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    Console.Write("|" + headers[i].PadRight(columnWidths[i] + 0));
+                }
+                Console.WriteLine("|");
+
+                // Print lines between headers and data
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    Console.Write("-".PadRight(columnWidths[i] + 1, '-'));
+                }
+                Console.WriteLine("-");
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    string[] records = {
+                                        row["empid"].ToString(),
+                                        row["empname"].ToString(),
+                                        row["gender"].ToString(),
+                                        row["designation"].ToString(),
+                                        GetDateString(row["doj"].ToString()),
+                                        row["leavedate"].ToString(),
+                                        GetDateString(row["empdob"].ToString()),
+                                        row["qualification"].ToString(),
+                                        row["depart"].ToString(),
+                                        row["salary"].ToString(),
+                                        row["married"].ToString(),
+                                        row["spouse"].ToString(),
+                                        row["address"].ToString(),
+                                        row["city"].ToString()
+                                       };
+
+                    for (int i = 0; i < records.Length; i++)
+                    {
+                        Console.Write("|" + records[i].PadRight(columnWidths[i] + 0));
+                    }
+                    Console.WriteLine("|");
+
+                    // Print lines between rows
+                    for (int i = 0; i < records.Length; i++)
+                    {
+                        Console.Write("-".PadRight(columnWidths[i] + 1, '-'));
+                    }
+                    Console.WriteLine("-");
+                }
+                Console.WriteLine("\n");
+                Console.Write("Press m to Go on Main Menu :");
+                string choice2 = Console.ReadLine();
+                if (choice2 == "m".ToUpper())
+                {
+                    MenuClass menuObject = new MenuClass();
+                    menuObject.menuMethod(empObject._userid);
+                }                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Something went wrong: " + ex.Message);
+            }
+        }       
+        public void callAllEmpAttendanceView()
+        {
+            try
+            {
+                string queryAllEmpAttendance = "select * from employeeattendance";
+
+                DataTable dataTable = dalObject.GetDataTableFromDatabase(queryAllEmpAttendance, dalObject.openSqlConnection());
+                Console.Write("Welcome to HRM Application\n");
+                Console.Write("\n");
+                
+                string[] headers = { "Attendance ID", "Date Of Attendance", "Time IN", "Time OUT", "Present", "Emp ID" };
+
+                int[] columnWidths = new int[headers.Length];
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    columnWidths[i] = headers[i].Length;
+                }
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    string[] records = {
+                                        row["empattendanceid"].ToString(),
+                                        GetDateString(row["entrydate"]),
+                                        row["timein"].ToString(),
+                                        row["timeout"].ToString(),
+                                        row["present"].ToString(),
+                                        row["empid"].ToString(),
+                                       };
+                    for (int i = 0; i < records.Length; i++)
+                    {
+                        columnWidths[i] = Math.Max(columnWidths[i], records[i].Length);
+                    }
+                }
+                // Print headers with lines
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    Console.Write("-".PadRight(columnWidths[i] + 1, '-'));
+                }
+                Console.WriteLine("-");
+
+                // Print headers
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    Console.Write("|" + headers[i].PadRight(columnWidths[i] + 0));
+                }
+                Console.WriteLine("|");
+
+                // Print lines between headers and data
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    Console.Write("-".PadRight(columnWidths[i] + 1, '-'));
+                }
+                Console.WriteLine("-");
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    string[] records = {
+                                        row["empattendanceid"].ToString(),
+                                        GetDateString(row["entrydate"].ToString()),
+                                        row["timein"].ToString(),
+                                        row["timeout"].ToString(),
+                                        row["present"].ToString(),
+                                        row["empid"].ToString(),
+                                       };
+                    for (int i = 0; i < records.Length; i++)
+                    {
+                        Console.Write("|" + records[i].PadRight(columnWidths[i] + 0));
+                    }
+                    Console.WriteLine("|");
+
+                    // Print lines between rows
+                    for (int i = 0; i < records.Length; i++)
+                    {
+                        Console.Write("-".PadRight(columnWidths[i] + 1, '-'));
+                    }
+                    Console.WriteLine("-");
+                }
+                Console.WriteLine("\n");
+                Console.Write("Press m to Go on Main Menu :");
+                string choice2 = Console.ReadLine();
+                if (choice2 == "m".ToUpper())
+                {
+                    MenuClass menuObject = new MenuClass();
+                    menuObject.menuMethod(empObject._userid);
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Something went wrong: " + ex.Message);
+            }
+        }       
+        public void menuMethod(string userId)
+        {            
+            bool exit = false;            
+            while (!exit)
+            {
+                Console.Clear();
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.WriteLine("MAIN MENU FOR HRM APPLICATION");
+                Console.WriteLine("==============================");
+                Console.WriteLine("\n");               
+                callMenuRights(userId);               
+                Console.WriteLine("\n");
+                Console.Write("Enter your above choice : ");
+                choice = Console.ReadLine();
+                Console.ResetColor();
+                Console.WriteLine("\n");
+
+                switch (choice)
+                {
+                    case "1":
+                        #region Call the method for inserting Employee Record          
+                                                  
+                            string empQuery = "insert into employeeinfo values (@empid,@empname,@gender,@userid,@password,@designation,@doj,@leavedate)";
+                            string empQuery1= @"insert into employeedetail values (@empdob,@qualification,@depart,@salary,@married,@spouse,@address,
+                                                @city,@empid,@right1,@right2,@right3,@right4,@right5,@right6,@right7,@right8,@right9)";
+                        string menuRightsQueries = @"
+                                                    DECLARE @menuid1 INT = @menuid1_param;
+                                                    DECLARE @menuid2 INT = @menuid2_param;
+                                                    DECLARE @menuid3 INT = @menuid3_param;
+                                                    DECLARE @menuid4 INT = @menuid4_param;
+                                                    DECLARE @menuid5 INT = @menuid5_param;
+                                                    DECLARE @menuid6 INT = @menuid6_param;
+                                                    DECLARE @menuid7 INT = @menuid7_param;
+                                                    DECLARE @menuid8 INT = @menuid8_param;
+                                                    DECLARE @menuid9 INT = @menuid9_param;
+
+                                                    IF @menuid1 <> -1
+                                                        INSERT INTO menurights(menuid, empid) VALUES (@menuid1, @empid);
+
+                                                    IF @menuid2 <> -1
+                                                        INSERT INTO menurights(menuid, empid) VALUES (@menuid2, @empid);
+
+                                                    IF @menuid3 <> -1
+                                                        INSERT INTO menurights(menuid, empid) VALUES (@menuid3, @empid);
+
+                                                    IF @menuid4 <> -1
+                                                        INSERT INTO menurights(menuid, empid) VALUES (@menuid4, @empid);
+
+                                                    IF @menuid5 <> -1
+                                                        INSERT INTO menurights(menuid, empid) VALUES (@menuid5, @empid);
+
+                                                    IF @menuid6 <> -1
+                                                        INSERT INTO menurights(menuid, empid) VALUES (@menuid6, @empid);
+
+                                                    IF @menuid7 <> -1
+                                                        INSERT INTO menurights(menuid, empid) VALUES (@menuid7, @empid);
+
+                                                    IF @menuid8 <> -1
+                                                        INSERT INTO menurights(menuid, empid) VALUES (@menuid8, @empid);
+
+                                                    IF @menuid9 <> -1
+                                                        INSERT INTO menurights(menuid, empid) VALUES (@menuid9, @empid);
+                                                ";
+                        try
+                        {
+                            int menuId = Convert.ToInt32(choice);
+
+                            if (menuId == 1)
+                            {
+                                dalObject.insertEmpRecord(empQuery, dalObject.openSqlConnection());
+                                dalObject.insertDetailEmpRecord(empQuery1, dalObject.openSqlConnection(), empDetailObject);
+                                dalObject.InsertingMenuRightsID1(menuRightsQueries, dalObject.openSqlConnection(), empDetailObject);
+                                break;
+                            }                            
+                        }                        
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error: " + ex.Message);
+                        }                             
+                        #endregion
+                        break;
+                    case "2":
+                        #region Call the method for Time IN attendance Employee Record          
+                        
+                            string empAttendanceInsertQuery = "insert into employeeattendance values (@entrydate,@timein,@timeout,@present,@empid)";                            
+                        try
+                        {
+                            int menuId = Convert.ToInt32(choice);
+
+                            if (menuId == 2)
+                            {
+                                string insertAttendance = dalObject.timeInEmpAttendanceRecord(empAttendanceInsertQuery, dalObject.openSqlConnection());
+                                Console.WriteLine(insertAttendance);                               
+                                break;
+                            }                            
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error: " + ex.Message);
+                        }                   
+                        #endregion
+                        break;
+                    case "3":
+                        #region Call the method for Time OUT attendance Employee Record     
+                        string empAttendanceTimeOutQuery = "update employeeattendance set timeout=@timeout where empid=@empid and entrydate=@entrydate";                        
+                        try
+                        {
+                            int menuId = Convert.ToInt32(choice);
+
+                            if (menuId == 3)
+                            {
+                                string insertTimeOutAttendance = dalObject.timeOutEmpAttendanceRecord(empAttendanceTimeOutQuery, dalObject.openSqlConnection());
+                                Console.WriteLine(insertTimeOutAttendance);                                
+                                break;
+                            }                           
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error: " + ex.Message);
+                        }    
+                        #endregion
+                        break;
+                    case "4":
+                        #region Call the method for Attendance View of All Employee                         
+                        try
+                            {
+                             int menuId = Convert.ToInt32(choice);
+
+                            if (menuId == 4)
+                            {
+                                callAllEmpAttendanceView();                                
+                                break;
+                            }                                              
+                            }
+                        catch (Exception ex)
+                            {
+                                Console.WriteLine("Error: " + ex.Message);
+                            }                        
+                        #endregion                       
+                        break;
+                    case "5":
+                        #region Call the method for All Employee Detail  
+                        string menuRightsQuery5 = $"insert into menurights values (@menuid,@empid)";
+                        try
+                        {
+                            int menuId = Convert.ToInt32(choice);
+
+                            if (menuId == 5)
+                            {
+                                callAllEmpData();                                
+                                break;
+                            }                            
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error: " + ex.Message);
+                        }                       
+                        #endregion
+                        break;
+                    case "6":
+                        #region Call the method for Single Employee Detail  
+
+                         string empSingleQuery = @"select ef.empid,ef.empname,ef.gender,ef.designation,ef.doj,ef.leavedate,ed.empdob,ed.qualification,
+                                                ed.depart,ed.salary,ed.married,ed.spouse,
+                                        ed.address,ed.city from employeeinfo ef inner join employeedetail ed on ef.empid = ed.empid where ed.empid =@id";                        
+                        try
+                        {
+                            int menuId = Convert.ToInt32(choice);
+
+                            if (menuId == 6)
+                            {
+                                string resultSingleEmp = dalObject.displayEmpRecord(empSingleQuery, dalObject.openSqlConnection());
+                                Console.WriteLine(resultSingleEmp);                                
+                                Console.WriteLine("\n");
+                                Console.WriteLine("Press Enter to Continue......");
+                                Console.ReadLine();
+                                break;
+                            }                            
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error: " + ex.Message);
+                        }          
+                        #endregion
+                        break;
+                    case "7":
+                        #region Call the method for updating Employee Detail Record          
+                       
+                            string empQueryUpdate = @"update employeeinfo set empname=@empname,gender=@gender,userid=@userid,password=@password,
+                                                      designation=@designation,doj=@doj,leavedate=@leavedate where empid=@empid";
+                            string empDetailQuery = @"update employeedetail set empdob=@empdob, qualification=@qualification, depart=@depart, salary=@salary, 
+                                                      married=@married, spouse=@spouse, address=@address, city=@city where empid=@empid";                            
+                        try
+                        {
+                            int menuId = Convert.ToInt32(choice);
+
+                            if (menuId == 7)
+                            {
+                                dalObject.updateEmpRecord(empQueryUpdate, dalObject.openSqlConnection());
+                                dalObject.updateEmpDetailRecord(empDetailQuery, dalObject.openSqlConnection());                               
+                                break;
+                            }                           
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error: " + ex.Message);
+                        }                                               
+                        #endregion
+                        break;
+                    case "8":
+                        #region Call the method for deleting Employee Record         
+                        
+                            string empQueryDetail = "delete from employeedetail where empid=@empid";
+                            string empQueryMaster = "delete from employeeinfo where empid=@empid";
+                        try
+                        {
+                            int menuId = Convert.ToInt32(choice);
+
+                            if (menuId == 8)
+                            {
+                                dalObject.deleteEmpDetailRecord(empQueryDetail, dalObject.openSqlConnection());
+                                dalObject.deleteEmpRecord(empQueryMaster, dalObject.openSqlConnection());                                
+                                break;
+                            }                          
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error: " + ex.Message);
+                        }                                                         
+                        #endregion
+                        break;
+                    case "9":
+                        Console.Clear();
+                        string LoginQuery = "select * from employeeinfo where userid=@userid and password=@password";                       
+                        dalObject.loginMethod(LoginQuery, dalObject.openSqlConnection());                        
+                        break;
+                    default:
+                        Console.WriteLine("Invalid choice. Press Enter to try again...");
+                        Console.ReadLine();
+                        break;
+                }
+            }
+        }       
+    }
+}
+
+
+
+
+using System;
+
+
+namespace HRM_App
+{
+    class employeeinfo
+    {
+        public int _empid { get; set; }
+        public string _empname { get; set; }
+        public string _gender { get; set; }
+        public string _userid { get; set; }
+        public string _password { get; set; }
+        public string _designation { get; set; }
+        public DateTime _doj { get; set; }
+        public DateTime? _leavedate { get; set; }
+    }
+}
+
+
+
+
+using System;
+
+
+namespace HRM_App
+{
+    class employeedetail
+    {
+        public DateTime _empdob { get; set; }
+        public string _qualification { get; set; }
+        public string _depart { get; set; }
+        public decimal _salary { get; set; }
+        public char _married { get; set; }
+        public string _spouse { get; set; }
+        public string _address { get; set; }
+        public string _city { get; set; }
+        public int _empid { get; set; }
+        public int? _right1 { get; set; }
+        public int? _right2 { get; set; }
+        public int? _right3 { get; set; }
+        public int? _right4 { get; set; }
+        public int? _right5 { get; set; }
+        public int? _right6 { get; set; }
+        public int? _right7 { get; set; }
+        public int? _right8 { get; set; }
+        public int? _right9 { get; set; }
+    }
+}
+
+
+
+
+using System;
+
+namespace HRM_App
+{
+    class employeeattendance
+    {
+        public DateTime _entrydate { get; set; }
+        public DateTime _timein { get; set; }
+        public DateTime? _timeout { get; set; }
+        public char _present { get; set; }
+        public int _empForeignid { get; set; }
+    }
+}
+
+
+
+
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+
+
+namespace HRM_App
+{                                   // HRM APPLICATION
+    class DALClass
+    {        
+        employeeinfo empObject = new employeeinfo();
+        employeeattendance attendanceObject = new employeeattendance();
+        employeedetail empDetailObject = new employeedetail();
+        menurights menuRightObject = new menurights();      
+
+        #region Connection Open Method
+        public SqlConnection openSqlConnection()
+        {
+            string connectionString = @"Password = National12; MultipleActiveResultSets=true; Persist Security Info = True; User ID = sndpro; 
+                                                   Initial Catalog = CP_NDB_25; Data Source = 10.1.113.36";
+            SqlConnection connection = new SqlConnection(connectionString);
+
+            try
+            {               
+                connection.Open();
+                return connection;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Someting wrong in connection: " + ex.Message);
+                return null;
+            }
+                  
+        }
+        #endregion
+
+        static string GetPassword()
+        {
+            string password = "";
+            ConsoleKeyInfo key;
+            do
+            {
+                key = Console.ReadKey(true);
+                if (key.Key != ConsoleKey.Enter)
+                {                    
+                    Console.Write("*");
+                    password += key.KeyChar;
+                }
+            } while (key.Key != ConsoleKey.Enter);
+
+            return password;
+        }
+
+        #region Login Method
+        public void loginMethod(string query, SqlConnection connection)
+        {
+            try
+            {
+                Console.WriteLine("Welcome to HRM Application");
+                Console.WriteLine("********Login Page********");
+                Console.WriteLine("\n");
+
+                Console.Write("Enter the Employee User Id  :");
+                empObject._userid = Console.ReadLine();               
+                Console.WriteLine("\n");
+                Console.Write("Enter the Employee Password  :");
+                empObject._password = GetPassword();             
+
+                SqlCommand command = new SqlCommand(query, connection);
+
+                command.Parameters.AddWithValue("@userid", empObject._userid);
+                command.Parameters.AddWithValue("@password", empObject._password);                
+
+                SqlDataReader reader = command.ExecuteReader();
+                {
+                    if (reader.Read())
+                    {
+                        string column1 = (reader["userid"]).ToString();
+                        string column2 = reader["password"].ToString();
+
+                        if (empObject._password==column2 && empObject._userid==column1 )
+                        {                            
+                            Console.WriteLine("Login successful!");
+                            Console.WriteLine("\n");
+                            Console.WriteLine("Press Enter to Continue......");
+                            Console.ReadLine();
+                            Console.Clear();                            
+                            MenuClass menuObject = new MenuClass();
+                            menuObject.menuMethod(empObject._userid);                           
+                        }
+                        else
+                        {
+                          
+                            Console.WriteLine("Password is empty or null. Login failed!");
+                            Environment.Exit(0);
+                            Console.ReadKey();
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Login failed. Please check your User ID and password.");
+                        Environment.Exit(0);
+                        Console.ReadKey();
+                    }
+                }
+                Console.ReadLine();
+            }
+            catch (Exception ex)
+            {                
+                Console.WriteLine("Error: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        #endregion
+
+        #region confirmation for delete method
+        static bool GetUserConfirmation()
+        {
+            Console.Write("Are you confirm for delete? (Y/N): ");
+            string response = Console.ReadLine()?.Trim().ToUpper();
+
+            return response == "Y";
+        }
+        #endregion
+
+        #region Employee Insert Record Method
+        public void insertEmpRecord(string query, SqlConnection connection)
+        {
+            SqlTransaction transaction = connection.BeginTransaction();
+            try
+            {
+                Console.Write("Welcome to HRM Application\n");
+                Console.Write("Addition of Employee Record\n");
+                Console.Write("\n");
+                // Taking input for inserting a record
+                Console.Write("Enter the employee Id  :");
+                empObject._empid = Convert.ToInt32(Console.ReadLine());
+                int recordIdToCheck = empObject._empid;
+                string queryExistRecord = $"SELECT COUNT(*) FROM employeeinfo WHERE empid = @empid";
+                SqlCommand command = new SqlCommand(queryExistRecord, connection);
+                command.Parameters.AddWithValue("@empid", recordIdToCheck);
+                command.Transaction = transaction;
+                int count = Convert.ToInt32(command.ExecuteScalar());
+
+                if (count > 0)
+                {
+                    Console.WriteLine("\n");
+                    Console.WriteLine($"{empObject._empid} ID is already Exists");
+                    Console.WriteLine("Press enter to continue...");
+                    Console.ReadLine();
+                    MenuClass menuObject = new MenuClass();
+                    menuObject.menuMethod(empObject._userid);
+                }
+                Console.Write("Enter the employee Name :");
+                empObject._empname = Convert.ToString(Console.ReadLine());
+                Console.Write("Enter the employee Gender (m/f) :");
+                while (true)
+                {
+                    string gender = Console.ReadLine();
+
+                    if (gender != null && gender.Length == 1)
+                    {
+                        char genderChar = char.ToUpper(gender[0]);
+
+                        if (genderChar == 'M' || genderChar == 'F')
+                        {
+                            empObject._gender = genderChar.ToString();
+                            break;
+                        }
+                    }
+                    Console.Write("Invalid input, Please enter 'm' or 'f': ");
+                }
+                Console.Write("Enter the employee User ID :");
+                empObject._userid = Convert.ToString(Console.ReadLine());
+                Console.Write("Enter the employee Password :");
+                empObject._password= Convert.ToString(Console.ReadLine());
+                Console.Write("Enter the employee Designation :");
+                empObject._designation = Convert.ToString(Console.ReadLine());
+                Console.Write("Enter the employee date of joining (in the format yyyy-MM-dd) :");
+                empObject._doj = Convert.ToDateTime(Console.ReadLine());
+                Console.Write("Enter the employee date of leaving (press Enter for no leave date):");
+                string leaveDateInput = Console.ReadLine();
+                if (DateTime.TryParse(leaveDateInput, out DateTime leaveDate))
+                {
+                    empObject._leavedate = leaveDate;
+                }
+                else if (string.IsNullOrEmpty(leaveDateInput))
+                {
+                    empObject._leavedate = null;
+                }
+                command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@empid", empObject._empid);
+                command.Parameters.AddWithValue("@empname", empObject._empname);
+                command.Parameters.AddWithValue("@gender", empObject._gender);
+                command.Parameters.AddWithValue("@designation", empObject._designation);
+                command.Parameters.AddWithValue("@doj", empObject._doj);
+                command.Parameters.AddWithValue("@userid", empObject._userid);
+                command.Parameters.AddWithValue("@password", empObject._password);
+
+                if (empObject._leavedate.HasValue)
+                {
+                    command.Parameters.AddWithValue("@leavedate", empObject._leavedate);
+                }
+                else
+                {
+                    command.Parameters.AddWithValue("@leavedate", DBNull.Value);
+                }
+                command.Transaction = transaction;
+                int a = command.ExecuteNonQuery();
+
+                if (a > 0)
+                {
+
+                    transaction.Commit();
+                }
+                else
+                {
+                    Console.WriteLine("Not inserted..kindly check the issue");
+                }               
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                Console.WriteLine("Error: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        #endregion
+
+        #region Employee Insert Detail Record Method
+        public void insertDetailEmpRecord(string query, SqlConnection connection, employeedetail empDetailObject)
+        {
+            SqlTransaction transaction = connection.BeginTransaction();
+            try
+            {
+                // Taking input for inserting a record in Detail table
+                Console.Write("Enter the employee date of Birth (in the format yyyy-MM-dd) :");
+                empDetailObject._empdob = Convert.ToDateTime(Console.ReadLine());
+                Console.Write("Enter the Qualification  :");
+                empDetailObject._qualification = Console.ReadLine().ToUpper();
+                Console.Write("Enter the Depart Name  :");
+                empDetailObject._depart = Console.ReadLine();
+                Console.Write("Enter the Salary  :");
+                empDetailObject._salary = Convert.ToDecimal(Console.ReadLine());
+                Console.Write("Enter married for y or n  :");
+                empDetailObject._married = Convert.ToChar(Console.ReadLine().ToUpper());
+                Console.Write("Enter Spouse Name  :");
+                empDetailObject._spouse = Console.ReadLine();
+                Console.Write("Enter Address  :");
+                empDetailObject._address = Console.ReadLine();
+                Console.Write("Enter City name  :");
+                empDetailObject._city = Console.ReadLine();               
+                Console.Write("Enter 1 for inserting emp detail rights or leave it blank for no rights :");
+                string rightInput1 = Console.ReadLine();
+                if (string.IsNullOrEmpty(rightInput1) || rightInput1 == "0")
+                {
+                    empDetailObject._right1 = null;
+                }
+                else if (rightInput1 == "1")
+                {
+                    empDetailObject._right1 = 1;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter 1 or leave it blank for no rights");
+                }
+                Console.Write("Enter 2 for Time IN rights or leave it blank for no rights :");
+                string rightInput2 = Console.ReadLine();
+                if (string.IsNullOrEmpty(rightInput2) || rightInput2 == "0")
+                {
+                    empDetailObject._right2 = null;
+                }
+                else if (rightInput2 == "2")
+                {
+                    empDetailObject._right2 = 2;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter 2 or leave it blank for no rights");
+                }
+                Console.Write("Enter 3 for Time Out rights or leave it blank for no rights :");
+                string rightInput3 = Console.ReadLine();
+                if (string.IsNullOrEmpty(rightInput3) || rightInput3 == "0")
+                {
+                    empDetailObject._right3 = null;
+                }
+                else if (rightInput3 == "3")
+                {
+                    empDetailObject._right3 = 3;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter 3 or leave it blank for no rights");
+                }
+                Console.Write("Enter 4 for Attendance view of all emp rights or leave it blank for no rights :");
+                string rightInput4 = Console.ReadLine();
+                if (string.IsNullOrEmpty(rightInput4) || rightInput4 == "0")
+                {
+                    empDetailObject._right4 = null;
+                }
+                else if (rightInput4 == "4")
+                {
+                    empDetailObject._right4 = 4;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter 4 or leave it blank for no rights");
+                }
+                Console.Write("Enter 5 for view of all emp rights or leave it blank for no rights :");
+                string rightInput5 = Console.ReadLine();
+                if (string.IsNullOrEmpty(rightInput5) || rightInput5 == "0")
+                {
+                    empDetailObject._right5 = null;
+                }
+                else if (rightInput5 == "5")
+                {
+                    empDetailObject._right5 = 5;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter 5 or leave it blank for no rights");
+                }
+                Console.Write("Enter 6 for view of single emp rights or leave it blank for no rights :");
+                string rightInput6 = Console.ReadLine();
+                if (string.IsNullOrEmpty(rightInput6) || rightInput6 == "0")
+                {
+                    empDetailObject._right6 = null;
+                }
+                else if (rightInput6 == "6")
+                {
+                    empDetailObject._right6 = 6;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter 6 or leave it blank for no rights");
+                }
+                Console.Write("Enter 7 for update of emp detail rights or leave it blank for no rights :");
+                string rightInput7 = Console.ReadLine();
+                if (string.IsNullOrEmpty(rightInput7) || rightInput7 == "0")
+                {
+                    empDetailObject._right7 = null;
+                }
+                else if (rightInput7 == "7")
+                {
+                    empDetailObject._right7 = 7;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter 7 or leave it blank for no rights");
+                }
+                Console.Write("Enter 8 for deleting emp detail rights or leave it blank for no rights :");
+                string rightInput8 = Console.ReadLine();
+                if (string.IsNullOrEmpty(rightInput8) || rightInput8 == "0")
+                {
+                    empDetailObject._right8 = null;
+                }
+                else if (rightInput8 == "8")
+                {
+                    empDetailObject._right8 = 8;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter 8 or leave it blank for no rights");
+                }
+                Console.Write("Enter 9 for LogOut rights or leave it blank for no rights :");
+                string rightInput9 = Console.ReadLine();
+                if (string.IsNullOrEmpty(rightInput9) || rightInput9 == "0")
+                {
+                    empDetailObject._right9 = null;
+                }
+                else if (rightInput9 == "9")
+                {
+                    empDetailObject._right9 = 9;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter 9 or leave it blank for no rights");
+                }
+                empDetailObject._empid = empObject._empid;
+                SqlCommand command = new SqlCommand(query,connection);
+                command.Parameters.AddWithValue("@empdob", empDetailObject._empdob);
+                command.Parameters.AddWithValue("@qualification", empDetailObject._qualification);
+                command.Parameters.AddWithValue("@depart", empDetailObject._depart);
+                command.Parameters.AddWithValue("@salary", empDetailObject._salary);
+                command.Parameters.AddWithValue("@married", empDetailObject._married);
+                command.Parameters.AddWithValue("@spouse", empDetailObject._spouse);
+                command.Parameters.AddWithValue("@address", empDetailObject._address);
+                command.Parameters.AddWithValue("@city", empDetailObject._city);
+                command.Parameters.AddWithValue("@empid", empDetailObject._empid);
+                command.Parameters.AddWithValue("@right1", empDetailObject._right1 ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@right2", empDetailObject._right2 ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@right3", empDetailObject._right3 ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@right4", empDetailObject._right4 ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@right5", empDetailObject._right5 ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@right6", empDetailObject._right6 ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@right7", empDetailObject._right7 ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@right8", empDetailObject._right8 ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@right9", empDetailObject._right9 ?? (object)DBNull.Value);                
+
+                command.Transaction = transaction;
+                int a = command.ExecuteNonQuery();
+
+                if (a > 0)
+                {
+                    Console.Write($" ID: {empObject._empid}\n NAME: {empObject._empname}\n GENDER: {empObject._gender}\n DESIGNATION: {empObject._designation}\n DOJ: {empObject._doj}\n EMPLeaveDate: {empObject._leavedate}\n");
+                    Console.Write($" DOB: {empDetailObject._empdob}\n QUALIFICATION: {empDetailObject._qualification}\n DEPARTMENT: {empDetailObject._depart}\n SALARY: {empDetailObject._salary}\n MARRIED: {empDetailObject._married}\n SPOUSE: {empDetailObject._spouse}\n ADDRESS: {empDetailObject._address}\n CITY: {empDetailObject._city}\n EMPID: {empDetailObject._empid}\n\n");
+                    Console.Write($" Right1: {empDetailObject._right1}\n Right2: {empDetailObject._right2}\n Right3: {empDetailObject._right3}\n Right4: {empDetailObject._right4}\n Right5: {empDetailObject._right5}\n Right6: {empDetailObject._right6}\n Right7: {empDetailObject._right7}\n Right8: {empDetailObject._right8}\n Right9: {empDetailObject._right9}\n\n");
+                    Console.WriteLine("Record inserted successfully");                   
+                    transaction.Commit();
+                }
+                else
+                {
+                    Console.WriteLine("Not inserted..kindly check the issue");
+                }               
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                Console.WriteLine("Error: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }            
+            Console.Write("Press m to Go on Main Menu :");
+            string choice = Console.ReadLine();
+            if (choice == "m".ToUpper())
+            {
+                MenuClass menuObject = new MenuClass();
+                menuObject.menuMethod(empObject._userid);
+            }
+        }
+        #endregion
+
+        #region Employee Update Record Method
+        public void updateEmpRecord(string query, SqlConnection connection)
+        {
+            SqlTransaction transaction = connection.BeginTransaction();
+            try
+            {
+                Console.Write("Welcome to HRM Application\n");
+                Console.Write("Updation of Employee Record\n");
+                Console.Write("\n");
+                // Taking input for updating a record
+                Console.Write("Enter the employee Id  :");
+                empObject._empid = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Enter the employee Name :");
+                empObject._empname = Convert.ToString(Console.ReadLine());
+                Console.Write("Enter the employee Gender :");
+                empObject._gender = Convert.ToString(Console.ReadLine());
+                Console.Write("Enter the employee Designation :");
+                empObject._designation = Convert.ToString(Console.ReadLine());
+                Console.Write("Enter the employee date of joining (in the format yyyy-MM-dd) :");
+                empObject._doj = Convert.ToDateTime(Console.ReadLine());
+                Console.Write("Enter the employee date of leaving (press Enter for no leave date):");
+                string leaveDateInput = Console.ReadLine();
+                if (DateTime.TryParse(leaveDateInput, out DateTime leaveDate))
+                {
+                    empObject._leavedate = leaveDate;
+                }
+                else if (string.IsNullOrEmpty(leaveDateInput))
+                {
+                    empObject._leavedate = null;
+                }
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@empid", empObject._empid);
+                command.Parameters.AddWithValue("@empname", empObject._empname);
+                command.Parameters.AddWithValue("@gender", empObject._gender);
+                command.Parameters.AddWithValue("@designation", empObject._designation);
+                command.Parameters.AddWithValue("@doj", empObject._doj);
+                if (empObject._leavedate.HasValue)
+                {
+                    command.Parameters.AddWithValue("@leavedate", empObject._leavedate);
+                }
+                else
+                {
+                    command.Parameters.AddWithValue("@leavedate", DBNull.Value);
+                }
+                command.Transaction = transaction;
+                int a = command.ExecuteNonQuery();
+
+                if (a > 0)
+                {
+                    //Console.Write($" ID: {empObject._empid}\n NAME: {empObject._empname}\n GENDER: {empObject._gender}\n DESIGNATION: {empObject._designation}\n DOJ: {empObject._doj}\n EMPLeaveDate: {empObject._leavedate}\n");                   
+                    transaction.Commit();
+                }
+                else
+                {
+                    Console.WriteLine("Not updated..kindly check the issue");
+                }               
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                Console.WriteLine("Error: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        #endregion
+
+        #region Employee Detail Update Record Method
+        public void updateEmpDetailRecord(string query, SqlConnection connection)
+        {
+            SqlTransaction transaction = connection.BeginTransaction();
+            try
+            {
+                // Taking input for updating a record in Detail table
+                Console.Write("Enter the employee date of Birth (in the format yyyy-MM-dd) :");
+                empDetailObject._empdob = Convert.ToDateTime(Console.ReadLine());
+                Console.Write("Enter the Qualification  :");
+                empDetailObject._qualification = Console.ReadLine().ToUpper();
+                Console.Write("Enter the Depart Name  :");
+                empDetailObject._depart = Console.ReadLine();
+                Console.Write("Enter the Salary  :");
+                empDetailObject._salary = Convert.ToDecimal(Console.ReadLine());
+                Console.Write("Enter married for y or n  :");
+                empDetailObject._married = Convert.ToChar(Console.ReadLine().ToUpper());
+                Console.Write("Enter Spouse Name  :");
+                empDetailObject._spouse = Console.ReadLine();
+                Console.Write("Enter Address  :");
+                empDetailObject._address = Console.ReadLine();
+                Console.Write("Enter City name  :");
+                empDetailObject._city = Console.ReadLine();
+                empDetailObject._empid = empObject._empid;
+
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@empdob", empDetailObject._empdob);
+                command.Parameters.AddWithValue("@qualification", empDetailObject._qualification);
+                command.Parameters.AddWithValue("@depart", empDetailObject._depart);
+                command.Parameters.AddWithValue("@salary", empDetailObject._salary);
+                command.Parameters.AddWithValue("@married", empDetailObject._married);
+                command.Parameters.AddWithValue("@spouse", empDetailObject._spouse);
+                command.Parameters.AddWithValue("@address", empDetailObject._address);
+                command.Parameters.AddWithValue("@city", empDetailObject._city);
+                command.Parameters.AddWithValue("@empid", empDetailObject._empid);
+
+                command.Transaction = transaction;
+                int a = command.ExecuteNonQuery();
+
+                if (a > 0)
+                {
+                    Console.Write($" ID: {empObject._empid}\n NAME: {empObject._empname}\n GENDER: {empObject._gender}\n DESIGNATION: {empObject._designation}\n DOJ: {empObject._doj}\n EMPLeaveDate: {empObject._leavedate}\n");
+                    Console.Write($" DOB: {empDetailObject._empdob}\n QUALIFICATION: {empDetailObject._qualification}\n DEPARTMENT: {empDetailObject._depart}\n SALARY: {empDetailObject._salary}\n MARRIED: {empDetailObject._married}\n SPOUSE: {empDetailObject._spouse}\n ADDRESS: {empDetailObject._address}\n CITY: {empDetailObject._city}\n\n");
+                    Console.WriteLine("Record updated successfully");
+                    transaction.Commit();
+                }
+                else
+                {
+                    Console.WriteLine("Not inserted..kindly check the issue");
+                }
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                Console.WriteLine("Error: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+            Console.Write("Press m to Go on Main Menu :");
+            string choice = Console.ReadLine();
+            if (choice == "m".ToUpper())
+            {
+                MenuClass menuObject = new MenuClass();
+                menuObject.menuMethod(empObject._userid);
+            }
+        }
+        #endregion
+
+        #region Employee Master Delete Record Method
+        public void deleteEmpRecord(string query, SqlConnection connection)
+        {
+            SqlTransaction transaction = connection.BeginTransaction();
+            try
+            {
+                Console.Write("Enter the employee Id for Master Data  :");
+                empObject._empid = Convert.ToInt32(Console.ReadLine());
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@empid", empObject._empid);
+                
+                    command.Transaction = transaction;
+                    int a = command.ExecuteNonQuery();
+
+                    if (a > 0)
+                    {
+                        Console.WriteLine($"Master Record no.{empObject._empid} deleted successfully");
+                        Console.ReadLine();
+                        transaction.Commit();
+                    }                                                   
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                Console.WriteLine("Error: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        #endregion
+
+        #region Employee Child Delete Record Method
+        public void deleteEmpDetailRecord(string query, SqlConnection connection)
+        {
+            SqlTransaction transaction = connection.BeginTransaction();
+            try
+            {
+                Console.Write("Welcome to HRM Application\n");
+                Console.Write("Deletion of Employee Record\n");
+                Console.Write("\n");
+                // Taking input for deleting a record
+                Console.Write("Enter the employee Id for Detail Data  :");
+                empDetailObject._empid = Convert.ToInt32(Console.ReadLine());
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@empid", empDetailObject._empid);
+                if (GetUserConfirmation())
+                {
+                    command.Transaction = transaction;
+                    int a = command.ExecuteNonQuery();
+
+                    if (a > 0)
+                    {
+                        Console.WriteLine($"Detail Record no.{empDetailObject._empid} deleted successfully");
+                        transaction.Commit();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Not deleted..kindly check the issue");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                Console.WriteLine("Error: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        #endregion
+
+        #region Employee Single View Record Method
+        public string displayEmpRecord(string query, SqlConnection connection)
+        {
+            try
+            {
+                Console.Write("Welcome to HRM Application\n");
+                Console.Write("\n");
+                Console.Write("Enter the employee Id to display record :");
+                int id = Convert.ToInt32(Console.ReadLine());
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@id", id);
+                SqlDataReader reader = command.ExecuteReader();
+                if (reader.Read())
+                {             
+                    int column1 = Convert.ToInt32(reader["empid"]);
+                    string column2 = reader["empname"].ToString();
+                    string column3 = reader["gender"].ToString();
+                    string column4 = reader["designation"].ToString();
+                    string column5 = reader["doj"].ToString();
+                    string column6 = reader["leavedate"].ToString();
+                    string column7 = reader["empdob"].ToString();
+                    string column8 = reader["qualification"].ToString();
+                    string column9 = reader["depart"].ToString();
+                    string column10 = reader["salary"].ToString();
+                    string column11 = reader["married"].ToString();
+                    string column12 = reader["spouse"].ToString();
+                    string column13 = reader["address"].ToString();
+                    string column14 = reader["city"].ToString();
+                    string resultSingleEmpDetail =$"ID: {column1}\nNAME: {column2}\nGENDER: {column3}\nDESIGNATION: {column4}\nDOJ: {column5}\nEMPLeaveDate: {column6}\nDOBirth: {column7}\nQualification: {column8}\nDepartment: {column9}\nSalary: {column10}\nMarried: { column11}\nSpouse: { column12}\nAddress: { column13}\nCity: { column14}\n";
+                    return resultSingleEmpDetail;
+                }
+                else
+                {
+                    return "No records found.";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "Something went wrong: " + ex.Message;
+            }
+        }
+        #endregion
+
+        #region Method for Attendance View of All Employee
+        public DataTable GetDataTableFromDatabase(string query, SqlConnection connection)
+        {
+            DataTable dataTable = new DataTable();
+            SqlCommand command = new SqlCommand(query, connection);
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            adapter.Fill(dataTable);
+            return dataTable;
+        }
+        #endregion
+
+        #region Method for getting Id for Menu Option
+        public DataTable GetDataTableFromDatabase1(string query, SqlConnection connection)
+        {           
+            DataTable dataTable = new DataTable();
+            SqlCommand command = new SqlCommand(query, connection);
+            SqlDataAdapter adapter = new SqlDataAdapter(command);            
+            adapter.Fill(dataTable);
+            return dataTable;
+        }
+        #endregion
+
+        #region Employee Time IN Attendance Record Method
+        public string timeInEmpAttendanceRecord(string query, SqlConnection connection)
+        {
+            SqlTransaction transaction = connection.BeginTransaction();
+            try
+            {
+                DateTime currentTime = DateTime.Now;
+                Console.Write("Welcome to HRM Application\n");
+                Console.Write("Employee Time IN Attendance Record\n");
+                Console.Write("\n");
+                // Taking input for inserting Time IN record
+                Console.Write("Enter the employee Id for Time IN : ");
+                attendanceObject._empForeignid = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Enter the date entry for time IN (in the format yyyy-MM-dd) :");
+                attendanceObject._entrydate = Convert.ToDateTime(Console.ReadLine());
+                char inputPresent;
+                while (true)
+                {
+                    Console.Write("Enter Attendance for Present (Y): ");
+                    string userAttendanceInput = Console.ReadLine();
+
+                    if (string.IsNullOrEmpty(userAttendanceInput) || userAttendanceInput.Length != 1)
+                    {
+                        Console.WriteLine("Invalid input. Please enter a single character (y).");
+                        continue;
+                    }
+
+                    inputPresent = userAttendanceInput.ToUpper()[0];
+
+                    if (inputPresent == 'Y')
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid input. Please enter 'y' for present.");
+                    }
+                }
+                attendanceObject._present = inputPresent;
+                attendanceObject._timein = Convert.ToDateTime(currentTime.ToString("HH:mm:ss"));                
+                Console.WriteLine("\n");
+                string queryCheckId = $"select * from employeeinfo where empid = {attendanceObject._empForeignid}";
+                string queryExistRecord = $"SELECT COUNT(*) FROM employeeattendance WHERE empid = @empid and entrydate=@entrydate";
+                SqlCommand command = new SqlCommand();                     
+                command = new SqlCommand(queryCheckId, connection);
+                command.Parameters.AddWithValue("@empid", attendanceObject._empForeignid);
+                command.Transaction = transaction;
+                SqlDataReader reader = command.ExecuteReader();
+                if (reader.HasRows)
+                {
+
+                }
+                else
+                {
+                    Console.WriteLine("Your ID is not matching from DataBase");
+                }
+                reader.Close();
+                int recordIdToCheck = attendanceObject._empForeignid;
+                
+                command = new SqlCommand(queryExistRecord, connection);
+                command.Parameters.AddWithValue("@empid", recordIdToCheck);
+                command.Parameters.AddWithValue("@entrydate", attendanceObject._entrydate);
+                command.Transaction = transaction;
+                int count = Convert.ToInt32(command.ExecuteScalar());
+                if (count > 0)
+                {
+                    Console.WriteLine("You have already marked your attendance");
+                    Environment.Exit(0);
+                    Console.ReadKey();
+                }
+                command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@entrydate", attendanceObject._entrydate);
+                command.Parameters.AddWithValue("@timein", attendanceObject._timein);
+                if (attendanceObject._timeout == null)
+                {
+                    command.Parameters.AddWithValue("@timeout", DBNull.Value);
+                }
+                command.Parameters.AddWithValue("@present", attendanceObject._present);
+                command.Parameters.AddWithValue("@empid", attendanceObject._empForeignid);
+                command.Transaction = transaction;
+                int a = command.ExecuteNonQuery();
+                if (a > 0)
+                {
+                    string insertQueryResult = $" Attendance_DATE: {attendanceObject._entrydate}\n TIME_IN: {attendanceObject._timein}\n TIME_OUT: {attendanceObject._timeout}\n PRESENT: {attendanceObject._present}\n EMP_ID: {attendanceObject._empForeignid}\n";
+                    Console.WriteLine("You are successfully timed IN....");
+                    transaction.Commit();
+                    Console.ReadLine();                    
+                    return insertQueryResult;                   
+                }
+                else
+                {
+                    return "Not inserted..kindly check the issue";
+                }               
+            }
+
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                return "Error: " + ex.Message;
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        #endregion
+
+        #region Employee Time OUT Attendance Record Method
+        public string timeOutEmpAttendanceRecord(string query, SqlConnection connection)
+        {
+            SqlTransaction transaction = connection.BeginTransaction();
+            try
+            {
+                DateTime currentTime = DateTime.Now;
+                Console.Write("Welcome to HRM Application\n");
+                Console.Write("Employee Time OUT Attendance Record\n");
+                Console.Write("\n");
+                // Taking input for updating time out record
+                Console.Write("Enter the employee Id for Time OUT : ");
+                attendanceObject._empForeignid = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Enter the date entry for time out (in the format yyyy-MM-dd) :");
+                attendanceObject._entrydate = Convert.ToDateTime(Console.ReadLine());
+                attendanceObject._timeout = Convert.ToDateTime(currentTime.ToString("HH:mm:ss"));
+                SqlCommand command = new SqlCommand(query, connection);                                    
+                command.Parameters.AddWithValue("@empid", attendanceObject._empForeignid);
+                command.Parameters.AddWithValue("@timeout", attendanceObject._timeout);
+                command.Parameters.AddWithValue("@entrydate", attendanceObject._entrydate);
+
+                command.Transaction = transaction;
+                int a = command.ExecuteNonQuery();
+
+                if (a > 0)
+                {
+                    string insertQueryTimeOut = $" TIME_OUT: {attendanceObject._timeout}";
+                    Console.WriteLine("You have successfully time out");
+                    transaction.Commit();
+                    return insertQueryTimeOut;
+                }
+                else
+                {
+                    return "Not inserted..kindly check the issue";
+                }
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                return "Error: " + ex.Message;
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        #endregion
+
+        #region Inserting Record Method for Menu Rights 
+        public void InsertingMenuRightsID1(string query, SqlConnection connection, employeedetail empDetailObject)
+        {
+            SqlTransaction transaction = connection.BeginTransaction();
+            try
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+
+                command.Parameters.AddWithValue("@empid", empDetailObject._empid);
+                command.Parameters.AddWithValue("@menuid1_param", empDetailObject._right1 ?? -1);
+                command.Parameters.AddWithValue("@menuid2_param", empDetailObject._right2 ?? -1);
+                command.Parameters.AddWithValue("@menuid3_param", empDetailObject._right3 ?? -1);
+                command.Parameters.AddWithValue("@menuid4_param", empDetailObject._right4 ?? -1);
+                command.Parameters.AddWithValue("@menuid5_param", empDetailObject._right5 ?? -1);
+                command.Parameters.AddWithValue("@menuid6_param", empDetailObject._right6 ?? -1);
+                command.Parameters.AddWithValue("@menuid7_param", empDetailObject._right7 ?? -1);
+                command.Parameters.AddWithValue("@menuid8_param", empDetailObject._right8 ?? -1);
+                command.Parameters.AddWithValue("@menuid9_param", empDetailObject._right9 ?? -1);
+                command.Transaction = transaction;
+                int rowsAffected = command.ExecuteNonQuery();
+
+                if (rowsAffected > 0)
+                {
+                    transaction.Commit();
+                }
+                else
+                {
+                    Console.WriteLine("Not inserted..kindly check the issue");
+                }
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                Console.WriteLine("Error: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+
+        #endregion       
+    }
+}

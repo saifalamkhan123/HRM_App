@@ -1,0 +1,131 @@
+
+-- Database -- CP_NDB_25  --- For HRM APP
+
+-- string connectionString = @"Password = National12; Persist Security Info = True; User ID = sndpro; Initial Catalog = CP_NDB_25; Data Source = 10.1.113.36";
+
+create table employeeinfo
+(
+empid int primary key,
+empname varchar(35),
+gender char(1),
+userid varchar(20),
+password varchar(20),
+designation varchar(15),
+doj date,
+leavedate date,
+);
+
+insert into employeeinfo values (1,'saif','M','saif','saif123','Developer','12-09-2022',null)
+--delete from employeeinfo where empid=2
+select * from employeeinfo 
+--update employeeinfo set userid='nasir', password='nasir123', designation='developer' where empid=1
+
+create table menumapping
+(
+menuid int primary key identity(1,1),
+description varchar(100),
+);
+
+insert into menumapping values ('Inserting Employee Record') 
+insert into menumapping values ('Attendance for Time IN') 
+insert into menumapping values ('Attendance for Time OUT') 
+insert into menumapping values ('Attendance View for All Employee') 
+insert into menumapping values ('View for All Employee Details') 
+insert into menumapping values ('View for Single Employee Details') 
+insert into menumapping values ('Update for Employee Details') 
+insert into menumapping values ('Delete for Employee Details') 
+insert into menumapping values ('LogOut') 
+
+select * from menumapping 
+
+CREATE TABLE menurights
+(   
+    menuid INT,
+    empid INT,
+    PRIMARY KEY (menuid, empid),
+    CONSTRAINT FK_menuid FOREIGN KEY (menuid) REFERENCES menumapping(menuid),
+    CONSTRAINT FK_empid FOREIGN KEY (empid) REFERENCES employeeinfo(empid)    
+);
+
+insert into menurights values (1,1) 
+insert into menurights values (2,1) 
+insert into menurights values (3,1) 
+insert into menurights values (4,1) 
+insert into menurights values (5,1) 
+insert into menurights values (6,1) 
+insert into menurights values (7,1) 
+insert into menurights values (8,1) 
+insert into menurights values (9,1) 
+--delete from menurights where empid=2
+
+select * from menurights
+
+create table employeedetail
+(
+empdetailid int primary key identity(1,1),
+empdob date,
+qualification varchar(15),
+depart varchar(10),
+salary decimal(10,2),
+married char(1),
+spouse varchar(35),
+address varchar(50),
+city varchar(20),
+empid int foreign key references employeeinfo(empid),
+right1 int foreign key references menumapping(menuid),
+right2 int foreign key references menumapping(menuid),
+right3 int foreign key references menumapping(menuid),
+right4 int foreign key references menumapping(menuid),
+right5 int foreign key references menumapping(menuid),
+right6 int foreign key references menumapping(menuid),
+right7 int foreign key references menumapping(menuid),
+right8 int foreign key references menumapping(menuid),
+right9 int foreign key references menumapping(menuid)
+);
+
+insert into employeedetail values ('1977-04-19','MCS','Dev', 5000, 'y', 'abc', 'orangi','karachi',1,1,2,3,4,5,6,7,8,9)
+
+select * from employeedetail 
+
+--update employeedetail set empdob='1978-05-20', qualification='MS', depart='Dev', salary=2500, married='Y', spouse='abc', address='Orangi', 
+--city='Lahore' where empdetailid=11
+
+create table employeeattendance
+(
+empattendanceid int primary key identity(1,1),
+entrydate date,
+timein time,
+timeout time,
+present char(1),
+empid int foreign key references employeeinfo(empid)
+);
+
+insert into employeeattendance values ('2023-12-24','9:05','6:00','y',1)
+
+select * from employeeattendance where entrydate='2023-12-24' and empid=1
+
+select * from employeeattendance 
+
+--update employeeattendance set timeout=null where empid=1
+
+SELECT COUNT(*) FROM employeeattendance WHERE empid = 1 and entrydate='2023-12-24'
+
+--update employeeattendance set timeout='6:50' where empid=1 and entrydate='2023-12-24'
+
+--update employeeinfo set leavedate='2023-12-28' where empid=4
+
+select ef.empid,ef.empname,ef.gender,ef.designation,ef.doj,ef.leavedate,ed.empdob,ed.qualification,ed.depart,ed.salary,ed.married,ed.spouse,
+ed.address,ed.city from employeeinfo ef inner join employeedetail ed on ef.empid = ed.empid where ed.empid=3
+
+--update employeeinfo set gender='M' where empid between 1 and 3
+
+select * from employeeinfo where userid='nasir' and password='nasir123'
+
+
+SELECT m.menuid,m.description FROM menumapping m JOIN menurights r ON m.menuid = r.menuid join employeeinfo e on e.empid=r.empid where e.userid='moin'
+
+--insert into employeedetail values ('1988-03-05','ms','backof',2000,'y','abc','surjani', 'karachi',2,null,null,null,4,5,6,null,null,9)
+
+
+SELECT m.menuid,m.description FROM menumapping m JOIN menurights r ON m.menuid = r.menuid join employeeinfo e on e.empid=r.empid where e.userid='saif'
+
